@@ -18,5 +18,5 @@ doc/manual/target
 doc/tutorial/target
 conf/MANIFEST.MF
 target/
-
+bin/*
 
