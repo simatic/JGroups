@@ -1,0 +1,58 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	elementFormDefault="qualified" targetNamespace="urn:org:jgroups">
+	<xs:element name="config">
+		<xs:complexType>
+			<xs:choice maxOccurs="unbounded">
+				<xs:element name="Trains">
+					<xs:complexType>
+
+						<xs:attribute name="inputFile" type="xs:string">
+							<xs:annotation>
+								<xs:documentation>
+									input file name
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+
+						<xs:attribute name="trainsNumber" type="xs:int">
+							<xs:annotation>
+								<xs:documentation>
+									The number of trains on the circuit (default
+									1)
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+
+						<xs:attribute name="wagonLength" type="xs:int">
+							<xs:annotation>
+								<xs:documentation>
+									The wagons length during the execution
+									(default 32KB)
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+
+						<xs:attribute name="waitNb" type="xs:int">
+							<xs:annotation>
+								<xs:documentation>
+									The max number of waits (default 10)
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+
+						<xs:attribute name="waitTime" type="xs:int">
+							<xs:annotation>
+								<xs:documentation>
+									The default time to wait, in microsec (default
+									2)
+								</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
+				
