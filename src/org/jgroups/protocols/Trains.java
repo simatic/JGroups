@@ -124,9 +124,11 @@ public class Trains extends Protocol {
 		 * Create TrainsJniProxy
 		 */
 
-		myCallbackCircuitChange mycallbackCircuit = new myCallbackCircuitChange(
-				this);
-		myCallbackUtoDeliver mycallbackUto = new myCallbackUtoDeliver(this);
+		myCallbackCircuitChange mycallbackCircuit = new myCallbackCircuitChange();
+		mycallbackCircuit.setTrainsProtocolInstance(this);
+
+		myCallbackUtoDeliver mycallbackUto = new myCallbackUtoDeliver();
+		mycallbackCircuit.setTrainsProtocolInstance(this);
 
 		System.out.println("** Load interface");
 		trin = Interface.trainsInterface();
@@ -196,8 +198,8 @@ public class Trains extends Protocol {
 			trains.Message msgTrains = trains.Message
 					.messageFromPayload(trains.Message.StringToByteArray(String
 							.valueOf(msg)));
-			trin.Jnewmsg(msgTrains.getMessageHeader().getLen(), msg.toString()
-					.getBytes());
+			trin.Jnewmsg(msgTrains.getMessageHeader().getLen(),
+					trains.Message.StringToByteArray(String.valueOf(msg)));
 
 			int exitcode = trin.JutoBroadcast(msgTrains);
 			if (exitcode < 0) {
@@ -205,10 +207,6 @@ public class Trains extends Protocol {
 				break;
 			}
 
-			// Address dest = msg.getDest();
-			// DaisyHeader hdr = (DaisyHeader) msg.getHeader(getId());
-
-			// trains.sendMessageWithPayload(msg);
 			break;
 
 		// case Event.VIEW_CHANGE:
@@ -249,8 +247,8 @@ public class Trains extends Protocol {
 			System.out.println("Trains down unknown type = " + evt.getType());
 			break;
 		}
-		// return down_prot.down(evt);
-		return null;
+		 return down_prot.down(evt);
+//		return null;
 	}
 
 	// TODO: add sender
@@ -315,10 +313,21 @@ public class Trains extends Protocol {
 
 	private static final class myCallbackCircuitChange implements
 			CallbackCircuitChange {
+
+		private static final myCallbackCircuitChange CIRCUITCHANGE = new myCallbackCircuitChange();
+
 		private Trains prot = null;
 
-		public myCallbackCircuitChange(Trains pTrains) {
-			this.prot = pTrains;
+		private myCallbackCircuitChange() {
+			// Nothing to do
+		}
+
+		public static myCallbackCircuitChange getInstance() {
+			return CIRCUITCHANGE;
+		}
+
+		public void setTrainsProtocolInstance(Trains prot) {
+			this.prot = prot;
 		}
 
 		@Override
@@ -346,11 +355,21 @@ public class Trains extends Protocol {
 
 	private static final class myCallbackUtoDeliver implements
 			CallbackUtoDeliver {
+
+		private static final myCallbackUtoDeliver UTODELIVER = new myCallbackUtoDeliver();
+
 		private Trains prot = null;
 
-		public myCallbackUtoDeliver(Trains pTrains) {
+		public myCallbackUtoDeliver() {
 			// Nothing to do
-			this.prot = pTrains;
+		}
+
+		public static myCallbackUtoDeliver getInstance() {
+			return UTODELIVER;
+		}
+
+		public void setTrainsProtocolInstance(Trains prot) {
+			this.prot = prot;
 		}
 
 		@Override
