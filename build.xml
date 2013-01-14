@@ -108,7 +108,7 @@
                deprecation="off"
                optimize="off"
                listfiles="false"
-               includes="org/jgroups/**">
+               includes="org/jgroups/**, trains/**jgroups/**">
             <exclude name="**/obsolete/**"/>
             <src path="${src.dir}"/>
             <src path="${other.dir}"/>
@@ -134,7 +134,7 @@
                deprecation="off"
                optimize="off"
                listfiles="false"
-               includes="org/jgroups/**">
+               includes="org/jgroups/**, trains/**">
             <exclude name="**/obsolete/**"/>
         </javac>
     </target>
@@ -184,7 +184,7 @@
         <jar destfile="${dist.dir}/jgroups-${version}.jar"
              basedir="${compile.dir}"
              manifest="${conf.dir}/MANIFEST.MF"
-             includes="org/jgroups/**">
+             includes="org/jgroups/**, trains/**">
             <fileset dir="${conf.dir}" includes="*.dtd, *.xml, jg-messages*.properties" excludes="*-service.xml"/>
             <fileset dir="${compile.dir}/schema">
                 <include name="*.xsd"/>
@@ -217,7 +217,7 @@
         <jar jarfile="${dist.dir}/jgroups-sources.jar"
              basedir="${src.dir}"
              manifest="${conf.dir}/MANIFEST.MF"
-             includes="org/jgroups/**">
+             includes="org/jgroups/**, trians/**">
         </jar>
     </target>
 
