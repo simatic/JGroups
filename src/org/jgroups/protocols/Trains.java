@@ -334,6 +334,7 @@ public class Trains extends Protocol {
 			break;
 
 		case Event.GET_LOCAL_ADDRESS:
+			// Channel will handle this event
 			System.out.println("Trains up get_local_address");
 			break;
 
