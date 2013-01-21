@@ -190,7 +190,7 @@ public class Trains extends Protocol {
 	public Object down(final Event evt) {
 		System.out.println("Trains down");
 		int exitcode = 0;
-		
+
 		switch (evt.getType()) {
 		case Event.CONNECT:
 		case Event.CONNECT_USE_FLUSH:
@@ -209,7 +209,7 @@ public class Trains extends Protocol {
 			break;
 
 		case Event.MSG:
-			
+
 			System.out.println("Trains down message");
 
 			Message msg = (Message) evt.getArg();
@@ -295,7 +295,8 @@ public class Trains extends Protocol {
 			break;
 
 		default:
-			System.out.println("Trains down unknown type = " + evt.getType());
+			System.out.println("Trains down unknown type = "
+					+ Event.type2String(evt.getType()));
 			break;
 		}
 		// return down_prot.down(evt);
@@ -345,7 +346,7 @@ public class Trains extends Protocol {
 			break;
 
 		default:
-			System.out.println("Trains up unknown type = " + evt.getType());
+			System.out.println("Trains up unknown type = " + Event.type2String(evt.getType()));
 
 			break;
 		}
@@ -473,6 +474,11 @@ public class Trains extends Protocol {
 	}
 
 	private class AddressTrains implements Address {
+		private int address = 0;
+
+		public int getAddress() {
+			return this.address;
+		}
 
 		@Override
 		public void writeTo(DataOutput out) throws Exception {
@@ -488,8 +494,7 @@ public class Trains extends Protocol {
 
 		@Override
 		public int compareTo(Address o) {
-			// TODO Auto-generated method stub
-			return 0;
+			return this.getAddress() - ((AddressTrains) o).getAddress();
 		}
 
 		@Override
