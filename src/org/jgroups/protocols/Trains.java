@@ -99,7 +99,7 @@ public class Trains extends Protocol {
 
 	public void init() throws Exception {
 		stateTransferSemaphore = new Semaphore(1, true);
-		
+
 		System.out.println("Trains init");
 
 		/*
@@ -130,7 +130,8 @@ public class Trains extends Protocol {
 		 * Create TrainsJniProxy
 		 */
 
-		myCallbackCircuitChange mycallbackCircuit = myCallbackCircuitChange.getInstance();
+		myCallbackCircuitChange mycallbackCircuit = myCallbackCircuitChange
+				.getInstance();
 		mycallbackCircuit.setTrainsProtocolInstance(this);
 
 		myCallbackUtoDeliver mycallbackUto = myCallbackUtoDeliver.getInstance();
@@ -138,16 +139,6 @@ public class Trains extends Protocol {
 
 		System.out.println("** Load interface");
 		trin = Interface.trainsInterface();
-
-		System.out.println("** trInit");
-		int exitcode = trin.JtrInit(trainsNumber, wagonLength, waitNb,
-				waitTime, myCallbackCircuitChange.class.getName(),
-				myCallbackUtoDeliver.class.getName());
-
-		if (exitcode < 0) {
-			System.out.println("JtrInit failed.");
-			return;
-		}
 
 		/*
 		 * Test JNI proxy functionality
@@ -157,8 +148,8 @@ public class Trains extends Protocol {
 		/*
 		 * thread pool (why?)
 		 */
-//		default_pool = getTransport().getDefaultThreadPool();
-//		oob_pool = getTransport().getOOBThreadPool();
+		// default_pool = getTransport().getDefaultThreadPool();
+		// oob_pool = getTransport().getOOBThreadPool();
 
 		/*
 		 * trInit
@@ -175,9 +166,9 @@ public class Trains extends Protocol {
 		/*
 		 * test message
 		 */
-//		Message msg = new Message(null, local_addr, "message-1");
-//		Event evt = new Event(Event.MSG, msg);
-//		this.up(evt);
+		// Message msg = new Message(null, local_addr, "message-1");
+		// Event evt = new Event(Event.MSG, msg);
+		// this.up(evt);
 	}
 
 	public void stop() {
@@ -198,10 +189,27 @@ public class Trains extends Protocol {
 
 	public Object down(final Event evt) {
 		System.out.println("Trains down");
-
+		int exitcode = 0;
+		
 		switch (evt.getType()) {
+		case Event.CONNECT:
+		case Event.CONNECT_USE_FLUSH:
+		case Event.CONNECT_WITH_STATE_TRANSFER:
+		case Event.CONNECT_WITH_STATE_TRANSFER_USE_FLUSH:
+			System.out.println("Trains down connect type = " + evt.getType());
+			System.out.println("** trInit");
+			exitcode = trin.JtrInit(trainsNumber, wagonLength, waitNb,
+					waitTime, myCallbackCircuitChange.class.getName(),
+					myCallbackUtoDeliver.class.getName());
+
+			if (exitcode < 0) {
+				System.out.println("JtrInit failed.");
+				return null;
+			}
+			break;
+
 		case Event.MSG:
-			int exitcode = 0;
+			
 			System.out.println("Trains down message");
 
 			Message msg = (Message) evt.getArg();
@@ -255,10 +263,6 @@ public class Trains extends Protocol {
 			System.out.println("Trains down remove_address");
 			break;
 
-		case Event.CONNECT_USE_FLUSH:
-			System.out.println("Trains down connect_use_flush");
-			break;
-
 		case Event.DISCONNECT:
 			System.out.println("Trains down disconnect");
 			break;
@@ -266,16 +270,16 @@ public class Trains extends Protocol {
 		case Event.CONFIG:
 			System.out.println("Trains down config");
 			break;
-		
+
 		case Event.CLOSE_BARRIER:
 			stateTransferSemaphore.release();
 			System.out.println("Trains close barrier");
 			break;
-			
+
 		case Event.SUSPEND_STABLE:
 			System.out.println("Trains suspend stable");
 			break;
-			
+
 		case Event.OPEN_BARRIER:
 			try {
 				stateTransferSemaphore.acquire();
@@ -285,7 +289,7 @@ public class Trains extends Protocol {
 			}
 			System.out.println("Trains open barrier");
 			break;
-			
+
 		case Event.RESUME_STABLE:
 			System.out.println("Trains resume stable");
 			break;
@@ -297,17 +301,18 @@ public class Trains extends Protocol {
 		// return down_prot.down(evt);
 		return null;
 	}
-//
-//	// TODO: add sender
-//	public void myCallbackUtoDeliver(Message msg) {
-//		Event evt = new Event(Event.MSG, msg);
-//		this.up(evt);
-//	}
-//
-//	public void myCallbackCircuitChange(View view) {
-//		Event evt = new Event(Event.VIEW_CHANGE, view);
-//		this.up(evt);
-//	}
+
+	//
+	// // TODO: add sender
+	// public void myCallbackUtoDeliver(Message msg) {
+	// Event evt = new Event(Event.MSG, msg);
+	// this.up(evt);
+	// }
+	//
+	// public void myCallbackCircuitChange(View view) {
+	// Event evt = new Event(Event.VIEW_CHANGE, view);
+	// this.up(evt);
+	// }
 
 	//
 	// public class myCallbackCircuitChange implements CallbackCircuitChange{
@@ -440,7 +445,7 @@ public class Trains extends Protocol {
 				e.printStackTrace();
 			}
 			this.prot.stateTransferSemaphore.release();
-			
+
 			System.out
 					.println(sender + "sent content" + msgTrains.getPayload());
 			System.out.println("The content size is "
