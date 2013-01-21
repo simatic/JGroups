@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Semaphore;
 
 import org.jgroups.Address;
 import org.jgroups.Event;
@@ -71,6 +72,7 @@ public class Trains extends Protocol {
 
 	private Interface trin = null;
 	private Trains that;
+	private Semaphore stateTransferSemaphore = null;
 
 	/*
 	 * --------------------------------------------- Methods
@@ -96,6 +98,8 @@ public class Trains extends Protocol {
 	}
 
 	public void init() throws Exception {
+		stateTransferSemaphore = new Semaphore(1, true);
+		
 		System.out.println("Trains init");
 
 		/*
@@ -171,9 +175,9 @@ public class Trains extends Protocol {
 		/*
 		 * test message
 		 */
-		Message msg = new Message(null, local_addr, "message-1");
-		Event evt = new Event(Event.MSG, msg);
-		this.up(evt);
+//		Message msg = new Message(null, local_addr, "message-1");
+//		Event evt = new Event(Event.MSG, msg);
+//		this.up(evt);
 	}
 
 	public void stop() {
@@ -205,39 +209,16 @@ public class Trains extends Protocol {
 			System.out.println(msg.printHeaders());
 
 			System.out.println("msg = " + msg);
+			System.out.println("msg sent from " + msg.getSrc());
 
 			trains.Message msgTrains;
 			try {
 				// String str = msg.getBuffer();
 				byte[] payload = Util.objectToByteBuffer(msg);
-				System.out.println("first byte = "
-						+ Util.objectToByteBuffer(msg)[0]);
 				msgTrains = trains.Message.messageFromPayload(payload);
-
-				// byte[] payload = trains.Message.StringToByteArray(String
-				// .valueOf("hello"));
-				// msgTrains = trains.Message.messageFromPayload(payload);
 
 				trin.Jnewmsg(msgTrains.getPayload().length,
 						msgTrains.getPayload());
-
-				// System.out.println("first byte = "
-				// + Util.objectToByteBuffer(msg)[0]);
-				// System.out.println("payload = " + payload);
-				// System.out.println("string.valueOf = " +
-				// String.valueOf(msg));
-				//
-				// System.out.println("msgTrains = " + msgTrains);
-				//
-				// System.out.println("length = "
-				// + msgTrains.getMessageHeader().getLen() + " "
-				// + Util.objectToByteBuffer(msg).length);
-				//
-				// System.out.println("first byte = "
-				// + Util.objectToByteBuffer(msg)[0]);
-				//
-				// System.out.println("send content : "
-				// + Util.objectToByteBuffer(msg));
 
 				exitcode = trin.JutoBroadcast(msgTrains);
 			} catch (Exception e) {
@@ -284,6 +265,29 @@ public class Trains extends Protocol {
 
 		case Event.CONFIG:
 			System.out.println("Trains down config");
+			break;
+		
+		case Event.CLOSE_BARRIER:
+			stateTransferSemaphore.release();
+			System.out.println("Trains close barrier");
+			break;
+			
+		case Event.SUSPEND_STABLE:
+			System.out.println("Trains suspend stable");
+			break;
+			
+		case Event.OPEN_BARRIER:
+			try {
+				stateTransferSemaphore.acquire();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println("Trains open barrier");
+			break;
+			
+		case Event.RESUME_STABLE:
+			System.out.println("Trains resume stable");
 			break;
 
 		default:
@@ -377,6 +381,13 @@ public class Trains extends Protocol {
 
 		@Override
 		public void run(CircuitView cv) {
+			try {
+				this.prot.stateTransferSemaphore.acquire();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			this.prot.stateTransferSemaphore.release();
 			// Printing the circuit modification
 
 			// Printing the new/departed participant
@@ -422,19 +433,23 @@ public class Trains extends Protocol {
 
 		@Override
 		public void run(int sender, trains.Message msgTrains) {
-			System.out.println("reception first bit"
-					+ msgTrains.getPayload()[0]);
+			try {
+				this.prot.stateTransferSemaphore.acquire();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			this.prot.stateTransferSemaphore.release();
+			
 			System.out
 					.println(sender + "sent content" + msgTrains.getPayload());
 			System.out.println("The content size is "
 					+ msgTrains.getMessageHeader().getLen());
 			Message msg = null;
 			try {
-				// String str = (String) Util.objectFromByteBuffer(
-				// msgTrains.getPayload());
 				msg = (Message) Util.objectFromByteBuffer(msgTrains
 						.getPayload());
-				// System.out.println("received str = " + str);
+				System.out.println("received from = " + msg.getSrc());
 				System.out.println("received msg = " + msg);
 				System.out
 						.println("The content is " + (String) msg.getObject());
