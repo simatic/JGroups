@@ -213,7 +213,7 @@ public class Trains extends Protocol {
 			System.out.println("Trains down message");
 
 			Message msg = (Message) evt.getArg();
-			msg.setSrc(local_addr);
+//			msg.setSrc(local_addr); sender for trains is not important
 			System.out.println(msg.printHeaders());
 
 			System.out.println("msg = " + msg);
@@ -456,6 +456,7 @@ public class Trains extends Protocol {
 			try {
 				msg = (Message) Util.objectFromByteBuffer(msgTrains
 						.getPayload());
+				msg.setSrc(new AddressTrains(sender));
 				System.out.println("received from = " + msg.getSrc());
 				System.out.println("received msg = " + msg);
 				System.out
@@ -473,11 +474,21 @@ public class Trains extends Protocol {
 		}
 	}
 
-	private class AddressTrains implements Address {
+	private static class AddressTrains implements Address {
+		@Override
+		public String toString() {
+			// TODO Auto-generated method stub
+			return String.valueOf(address);
+		}
+
 		private int address = 0;
 
 		public int getAddress() {
 			return this.address;
+		}
+		
+		public AddressTrains(int addr){
+			this.address = addr;
 		}
 
 		@Override
