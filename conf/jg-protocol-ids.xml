@@ -59,6 +59,9 @@
     <class id="60" name="org.jgroups.protocols.relay.RELAY2"/>
     <class id="61" name="org.jgroups.protocols.FORWARD_TO_COORD"/>
 
+    <class id="62" name="org.jgroups.protocols.Trains"/>
+    
+
     <!-- IDs reserved for building blocks -->
     <class id="200" name="org.jgroups.blocks.RequestCorrelator"/> <!-- ID should be the same as Global.BLOCKS_START_ID -->
     <class id="201" name="org.jgroups.blocks.mux.MuxRequestCorrelator"/>
