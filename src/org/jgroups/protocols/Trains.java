@@ -3,9 +3,6 @@ package org.jgroups.protocols;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -98,6 +95,8 @@ public class Trains extends Protocol {
 	}
 
 	public void init() throws Exception {
+		
+		System.out.println("Trains protocol, whose id = " + this.id);
 		stateTransferSemaphore = new Semaphore(1, true);
 
 		System.out.println("Trains init");
@@ -397,18 +396,32 @@ public class Trains extends Protocol {
 			this.prot.stateTransferSemaphore.release();
 			// Printing the circuit modification
 
+			AddressTrains creator = null;
 			// Printing the new/departed participant
 			if (cv.getJoined() != 0) {
+				creator = new AddressTrains(cv.getJoined());
 				System.out.println(Integer.toString(cv.getJoined())
 						+ " has arrived.");
 			} else {
+				creator = new AddressTrains(cv.getDeparted());
 				System.out.println(Integer.toString(cv.getDeparted())
 						+ " is gone.");
 			}
+//			
+			ArrayList<Address> members = new ArrayList<Address>();
+			members.add(creator);
+			members.add(new AddressTrains(1));
+//			for(int i=1; i<=16; i++){
+//				int rank = i;
+//				System.out.print("rank = " + rank );
+//				int addr = cv.members.get(Integer.valueOf(rank)).intValue();
+//				System.out.println(", addr = " + addr);
+//				members.add(new AddressTrains(addr));
+//			}
 			// Need cv -> members as an array
-			// View view = new View(creator, id, members);
-			// Event evt = new Event(Event.VIEW_CHANGE, view);
-			// prot.up(evt);
+			 View view = new View(creator, 0, members);
+			 Event evt = new Event(Event.VIEW_CHANGE, view);
+			 prot.up(evt);
 
 			// Printing the current number of members
 			System.out
@@ -472,61 +485,6 @@ public class Trains extends Protocol {
 			}
 
 		}
-	}
-
-	private static class AddressTrains implements Address {
-		@Override
-		public String toString() {
-			// TODO Auto-generated method stub
-			return String.valueOf(address);
-		}
-
-		private int address = 0;
-
-		public int getAddress() {
-			return this.address;
-		}
-		
-		public AddressTrains(int addr){
-			this.address = addr;
-		}
-
-		@Override
-		public void writeTo(DataOutput out) throws Exception {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void readFrom(DataInput in) throws Exception {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public int compareTo(Address o) {
-			return this.getAddress() - ((AddressTrains) o).getAddress();
-		}
-
-		@Override
-		public void writeExternal(ObjectOutput out) throws IOException {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void readExternal(ObjectInput in) throws IOException,
-				ClassNotFoundException {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public int size() {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-
 	}
 
 	public static class TrainHeader extends Header {
