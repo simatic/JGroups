@@ -70,6 +70,7 @@ public class Trains extends Protocol {
 	private Interface trin = null;
 	private Trains that;
 	private Semaphore stateTransferSemaphore = null;
+	private String cluster = null;
 
 	/*
 	 * --------------------------------------------- Methods
@@ -95,7 +96,7 @@ public class Trains extends Protocol {
 	}
 
 	public void init() throws Exception {
-		
+
 		System.out.println("Trains protocol, whose id = " + this.id);
 		stateTransferSemaphore = new Semaphore(1, true);
 
@@ -195,6 +196,8 @@ public class Trains extends Protocol {
 		case Event.CONNECT_USE_FLUSH:
 		case Event.CONNECT_WITH_STATE_TRANSFER:
 		case Event.CONNECT_WITH_STATE_TRANSFER_USE_FLUSH:
+			this.cluster = (String) evt.getArg();
+
 			System.out.println("Trains down connect type = " + evt.getType());
 			System.out.println("** trInit");
 			exitcode = trin.JtrInit(trainsNumber, wagonLength, waitNb,
@@ -212,11 +215,13 @@ public class Trains extends Protocol {
 			System.out.println("Trains down message");
 
 			Message msg = (Message) evt.getArg();
-//			msg.setSrc(local_addr); sender for trains is not important
+			// msg.setSrc(local_addr); sender for trains is not important
 			System.out.println(msg.printHeaders());
 
 			System.out.println("msg = " + msg);
 			System.out.println("msg sent from " + msg.getSrc());
+			
+			msg.putHeader(this.id, new TrainHeader(this.cluster));
 
 			trains.Message msgTrains;
 			try {
@@ -345,7 +350,8 @@ public class Trains extends Protocol {
 			break;
 
 		default:
-			System.out.println("Trains up unknown type = " + Event.type2String(evt.getType()));
+			System.out.println("Trains up unknown type = "
+					+ Event.type2String(evt.getType()));
 
 			break;
 		}
@@ -407,21 +413,21 @@ public class Trains extends Protocol {
 				System.out.println(Integer.toString(cv.getDeparted())
 						+ " is gone.");
 			}
-//			
+			//
 			ArrayList<Address> members = new ArrayList<Address>();
 			members.add(creator);
 			members.add(new AddressTrains(1));
-//			for(int i=1; i<=16; i++){
-//				int rank = i;
-//				System.out.print("rank = " + rank );
-//				int addr = cv.members.get(Integer.valueOf(rank)).intValue();
-//				System.out.println(", addr = " + addr);
-//				members.add(new AddressTrains(addr));
-//			}
+			// for(int i=1; i<=16; i++){
+			// int rank = i;
+			// System.out.print("rank = " + rank );
+			// int addr = cv.members.get(Integer.valueOf(rank)).intValue();
+			// System.out.println(", addr = " + addr);
+			// members.add(new AddressTrains(addr));
+			// }
 			// Need cv -> members as an array
-			 View view = new View(creator, 0, members);
-			 Event evt = new Event(Event.VIEW_CHANGE, view);
-			 prot.up(evt);
+			View view = new View(creator, 0, members);
+			Event evt = new Event(Event.VIEW_CHANGE, view);
+			prot.up(evt);
 
 			// Printing the current number of members
 			System.out
@@ -477,8 +483,13 @@ public class Trains extends Protocol {
 				// msg = new Message(null, null, str);
 				// System.out.println("type is " + msgTrains.getPayload()[0]);
 				System.out.println("prot = " + prot);
-				Event evt = new Event(Event.MSG, msg);
-				prot.up(evt);
+				
+				String clusterName = ((TrainHeader)msg.getHeader(prot.id)).getClusterName();
+				if(prot.cluster.equals(clusterName)){
+					Event evt = new Event(Event.MSG, msg);
+					prot.up(evt);
+					
+				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -506,15 +517,24 @@ public class Trains extends Protocol {
 		}
 
 		public int size() {
-			return Global.INT_SIZE + this.clusterName.length();
+			int s = 0;
+			try {
+				s = Util.objectToByteBuffer(clusterName).length;
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return s;
 		}
 
 		public void writeTo(DataOutput out) throws Exception {
-			out.write(Util.objectToByteBuffer(clusterName));
+			Util.writeString(clusterName, out);
+//			out.write(Util.objectToByteBuffer(clusterName));
 		}
 
 		public void readFrom(DataInput in) throws Exception {
-			clusterName = (String) Util.objectFromStream(in);
+			Util.readString(in);
+//			clusterName = (String) Util.objectFromStream(in);
 		}
 
 		public String toString() {

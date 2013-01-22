@@ -65,4 +65,5 @@
     <class id="102" name="org.jgroups.protocols.relay.CanBeSiteMasterTopology"/>
 	
 	<class id="103" name="org.jgroups.protocols.AddressTrains"/>
+	<class id="104" name="org.jgroups.protocols.Trains$TrainHeader"/>
 </magic-number-class-mapping>
