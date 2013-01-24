@@ -149,7 +149,7 @@ public class Trains extends Protocol {
 	}
 
 	public Object down(final Event evt) {
-//		System.out.println("Trains down");
+		// System.out.println("Trains down");
 		int exitcode = 0;
 
 		switch (evt.getType()) {
@@ -174,12 +174,13 @@ public class Trains extends Protocol {
 
 		case Event.MSG:
 
-			System.out.println("Trains down message");
-
 			Message msg = (Message) evt.getArg();
-			// msg.setSrc(local_addr); sender for trains is not important
+			// msg.setSrc(local_addr); // sender for trains is not important
+			msg.setSrc(new AddressTrains(Interface.JgetMyAddress()));
 
 			msg.putHeader(this.id, new TrainHeader(this.cluster));
+
+			System.out.println("Trains down message " + msg);
 
 			trains.Message msgTrains;
 			try {
@@ -284,7 +285,7 @@ public class Trains extends Protocol {
 	// }
 
 	public Object up(Event evt) {
-//		System.out.println("Trains up");
+		// System.out.println("Trains up");
 
 		switch (evt.getType()) {
 		case Event.MSG:
@@ -359,28 +360,42 @@ public class Trains extends Protocol {
 			this.prot.stateTransferSemaphore.release();
 			// Printing the circuit modification
 
+			int addrMy = Interface.JgetMyAddress();
+
+			// use element 0 as a key indicator
+			// TODO: still have problem of matching local_addr!
 			AddressTrains creator = null;
+			for (int i = 0; i < cv.getMemb(); i++) {
+				int addrI = cv.getMembersAddress(i);
+				if (addrMy != addrI) {
+					creator = new AddressTrains(addrI);
+					break;
+				}
+			}
 			// Printing the new/departed participant
 			if (cv.getJoined() != 0) {
-				creator = new AddressTrains(cv.getJoined());
+				// creator = new AddressTrains(cv.getJoined());
 				System.out.println(Integer.toString(cv.getJoined())
 						+ " has arrived.");
 			} else {
-				creator = new AddressTrains(cv.getDeparted());
+				// creator = new AddressTrains(cv.getDeparted());
 				System.out.println(Integer.toString(cv.getDeparted())
 						+ " is gone.");
 			}
 			//
 			ArrayList<Address> members = new ArrayList<Address>();
-//			members.add(creator);
-//			members.add(new AddressTrains(1));
+			// members.add(creator);
+			// members.add(new AddressTrains(1));
 			for (int i = 0; i < cv.getMemb(); i++) {
 				int rank = i;
 				System.out.print("rank = " + rank);
 				int addr = cv.getMembersAddress(rank);
 				System.out.println(", addr = " + addr);
-				members.add(new AddressTrains(addr));
+				if (addrMy != addr) {
+					members.add(new AddressTrains(addr));
+				}
 			}
+			members.add(new AddressTrains(addrMy));
 			// Need cv -> members as an array
 			View view = new View(creator, 0, members);
 			Event evt = new Event(Event.VIEW_CHANGE, view);
@@ -428,24 +443,36 @@ public class Trains extends Protocol {
 			try {
 				msg = (Message) Util.objectFromByteBuffer(msgTrains
 						.getPayload());
-				msg.setSrc(new AddressTrains(sender));
-//				System.out.println("received from = " + msg.getSrc());
+				// msg.setSrc(new AddressTrains(sender));
+				// System.out.println("received from = " + msg.getSrc());
 				System.out.println("received msg = " + msg);
-//				System.out
-//						.println("The content is " + (String) msg.getObject());
+				// System.out
+				// .println("The content is " + (String) msg.getObject());
 				// msg = new Message(null, null, str);
 				// System.out.println("type is " + msgTrains.getPayload()[0]);
-//				System.out.println("prot = " + prot);
+				// System.out.println("prot = " + prot);
 
 				String clusterName = ((TrainHeader) msg.getHeader(prot.id))
 						.getClusterName();
 
-//				System.out.println("msg cluster = " + clusterName
-//						+ ", prot.clusterName = " + prot.cluster);
+				// System.out.println("msg cluster = " + clusterName
+				// + ", prot.clusterName = " + prot.cluster);
 
 				if (prot.cluster.equals(clusterName)) {
-					Event evt = new Event(Event.MSG, msg);
-					prot.up(evt);
+					if (msg.getDest() == null) {
+						// send normal message
+						Event evt = new Event(Event.MSG, msg);
+						prot.up(evt);
+					}
+					if (msg.getDest() != null) {
+						// e.g. state transfer msg
+						if (Interface.JgetMyAddress() != ((AddressTrains) msg
+								.getSrc()).getAddress()) {
+							// msg is not sent by me
+							Event evt = new Event(Event.MSG, msg);
+							prot.up(evt);
+						}
+					}
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
