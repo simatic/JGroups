@@ -27,5 +27,5 @@
 
 
 	<pbcast.STATE_TRANSFER />
-	<pbcast.FLUSH />
+	<!-- <pbcast.FLUSH /> -->
 </config>
