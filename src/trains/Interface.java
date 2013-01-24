@@ -1,6 +1,10 @@
 package trains;
 
 public class Interface {
+		 
+	private static int max_memb; /* Max number of members in the process*/
+	private static int myAddress; /* The addresse of the current process */
+
 	//native methods
 	public native int trInit(int trainsNumber, int wagonLength, int waitNb, int waitTime,
 			String callbackCircuitChange, 
@@ -13,6 +17,8 @@ public class Interface {
 	public native int trTerminate();
 	public native int newmsg(int payloadSize, byte[] payload);
 	public native int utoBroadcast(Message msg);
+	private static native int getMAX_MEMB();
+	private static native int getMyAddress();
 	private static native void initIDsMessageHeader();
 	private static native void initIDsMessage();
 	private static native void initIDsCircuitView();	
@@ -22,6 +28,7 @@ public class Interface {
 		System.loadLibrary("trains");
 		Interface trainsInterface = new Interface();
 		initIDs();
+		Interface.max_memb = JgetMAX_MEMB();
 		return trainsInterface;
 	}
 	
@@ -29,6 +36,18 @@ public class Interface {
 		initIDsMessageHeader();
 		initIDsMessage();
 		initIDsCircuitView();
+	}
+	
+	public static int JgetMAX_MEMB(){
+		return getMAX_MEMB();
+	}
+	
+	public static int JgetMyAddress(){
+		return getMyAddress();
+	}
+	
+	public static int getMax_Memb(){
+		return Interface.max_memb;
 	}
 	
 	//method to call native method trInit()
@@ -39,6 +58,7 @@ public class Interface {
 		
 		int exitcode = this.trInit(trainsNumber, wagonLength, waitNb, waitTime,
 				callbackCircuitChange, callbackUtoDeliver);	
+
 		return exitcode;
 	}
 	
