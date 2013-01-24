@@ -96,35 +96,13 @@ public class Trains extends Protocol {
 	}
 
 	public void init() throws Exception {
-
-		System.out.println("Trains protocol, whose id = " + this.id);
 		stateTransferSemaphore = new Semaphore(1, true);
 
 		System.out.println("Trains init");
 
 		/*
-		 * Test inputFile parameter and read inputFile
-		 */
-		System.out.println("inputFile = " + inputFile);
-
-		// // Z means:
-		// "The end of the input but for the final terminator, if any"
-		// @SuppressWarnings("resource")
-		// String output = new Scanner(new File("conf/" + inputFile))
-		// .useDelimiter("\\Z").next();
-		// System.out.println("Configuratinon: " + output);
-
-		/*
 		 * Load JNI lib //
 		 */
-		// System.setProperty(
-		// "java.library.path",
-		// "/home/wang/workspace/PFE/TrainsProtocolJava/TrainsProtocol/lib:/home/wang/workspace/PFE/TrainsProtocolJava/TrainsProtocol/lib::/home/wang/workspace/PFE/TrainsProtocolJava/in:/home/wang/workspace/PFE/TrainsProtocolJava/bin:/usr/java/packages/lib/amd64:/usr/lib/x86_64-linux-gnu/jni:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/usr/lib/jni:/lib:/usr/lib");
-		System.out.println("lib path = "
-				+ System.getProperty("java.library.path"));
-
-		// System.load("/mci/ei0912/wang_tie/workspace/JGroups/lib/TrainsJniProxy.so");
-		// System.loadLibrary("trains");
 
 		/*
 		 * Create TrainsJniProxy
@@ -141,20 +119,10 @@ public class Trains extends Protocol {
 		trin = Interface.trainsInterface();
 
 		/*
-		 * Test JNI proxy functionality
-		 */
-		// System.out.println(trains.getMessageFrom("sender"));
-
-		/*
 		 * thread pool (why?)
 		 */
 		// default_pool = getTransport().getDefaultThreadPool();
 		// oob_pool = getTransport().getOOBThreadPool();
-
-		/*
-		 * trInit
-		 */
-		// trains.trInit(trainsNumber, wagonLength, waitNb, waitTime);
 	}
 
 	public void start() throws Exception {
@@ -162,13 +130,6 @@ public class Trains extends Protocol {
 
 		super.start();
 		running = true;
-
-		/*
-		 * test message
-		 */
-		// Message msg = new Message(null, local_addr, "message-1");
-		// Event evt = new Event(Event.MSG, msg);
-		// this.up(evt);
 	}
 
 	public void stop() {
@@ -198,7 +159,8 @@ public class Trains extends Protocol {
 		case Event.CONNECT_WITH_STATE_TRANSFER_USE_FLUSH:
 			this.cluster = (String) evt.getArg();
 
-			System.out.println("Trains down connect type = " + evt.getType());
+			// System.out.println("Trains down connect type = " +
+			// evt.getType());
 			System.out.println("** trInit");
 			exitcode = trin.JtrInit(trainsNumber, wagonLength, waitNb,
 					waitTime, myCallbackCircuitChange.class.getName(),
@@ -216,16 +178,11 @@ public class Trains extends Protocol {
 
 			Message msg = (Message) evt.getArg();
 			// msg.setSrc(local_addr); sender for trains is not important
-			System.out.println(msg.printHeaders());
 
-			System.out.println("msg = " + msg);
-			System.out.println("msg sent from " + msg.getSrc());
-			
 			msg.putHeader(this.id, new TrainHeader(this.cluster));
 
 			trains.Message msgTrains;
 			try {
-				// String str = msg.getBuffer();
 				byte[] payload = Util.objectToByteBuffer(msg);
 				msgTrains = trains.Message.messageFromPayload(payload);
 
@@ -415,15 +372,15 @@ public class Trains extends Protocol {
 			}
 			//
 			ArrayList<Address> members = new ArrayList<Address>();
-			members.add(creator);
-			members.add(new AddressTrains(1));
-			// for(int i=1; i<=16; i++){
-			// int rank = i;
-			// System.out.print("rank = " + rank );
-			// int addr = cv.members.get(Integer.valueOf(rank)).intValue();
-			// System.out.println(", addr = " + addr);
-			// members.add(new AddressTrains(addr));
-			// }
+//			members.add(creator);
+//			members.add(new AddressTrains(1));
+			for (int i = 0; i < cv.getMemb(); i++) {
+				int rank = i;
+				System.out.print("rank = " + rank);
+				int addr = cv.getMembersAddress(rank);
+				System.out.println(", addr = " + addr);
+				members.add(new AddressTrains(addr));
+			}
 			// Need cv -> members as an array
 			View view = new View(creator, 0, members);
 			Event evt = new Event(Event.VIEW_CHANGE, view);
@@ -483,12 +440,16 @@ public class Trains extends Protocol {
 				// msg = new Message(null, null, str);
 				// System.out.println("type is " + msgTrains.getPayload()[0]);
 				System.out.println("prot = " + prot);
-				
-				String clusterName = ((TrainHeader)msg.getHeader(prot.id)).getClusterName();
-				if(prot.cluster.equals(clusterName)){
+
+				String clusterName = ((TrainHeader) msg.getHeader(prot.id))
+						.getClusterName();
+
+				System.out.println("msg cluster = " + clusterName
+						+ ", prot.clusterName = " + prot.cluster);
+
+				if (prot.cluster.equals(clusterName)) {
 					Event evt = new Event(Event.MSG, msg);
 					prot.up(evt);
-					
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -529,12 +490,12 @@ public class Trains extends Protocol {
 
 		public void writeTo(DataOutput out) throws Exception {
 			Util.writeString(clusterName, out);
-//			out.write(Util.objectToByteBuffer(clusterName));
+			// out.write(Util.objectToByteBuffer(clusterName));
 		}
 
 		public void readFrom(DataInput in) throws Exception {
-			Util.readString(in);
-//			clusterName = (String) Util.objectFromStream(in);
+			clusterName = Util.readString(in);
+			// clusterName = (String) Util.objectFromStream(in);
 		}
 
 		public String toString() {
