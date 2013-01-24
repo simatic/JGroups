@@ -149,7 +149,7 @@ public class Trains extends Protocol {
 	}
 
 	public Object down(final Event evt) {
-		System.out.println("Trains down");
+//		System.out.println("Trains down");
 		int exitcode = 0;
 
 		switch (evt.getType()) {
@@ -284,7 +284,7 @@ public class Trains extends Protocol {
 	// }
 
 	public Object up(Event evt) {
-		System.out.println("Trains up");
+//		System.out.println("Trains up");
 
 		switch (evt.getType()) {
 		case Event.MSG:
@@ -424,28 +424,24 @@ public class Trains extends Protocol {
 			}
 			this.prot.stateTransferSemaphore.release();
 
-			System.out
-					.println(sender + "sent content" + msgTrains.getPayload());
-			System.out.println("The content size is "
-					+ msgTrains.getMessageHeader().getLen());
 			Message msg = null;
 			try {
 				msg = (Message) Util.objectFromByteBuffer(msgTrains
 						.getPayload());
 				msg.setSrc(new AddressTrains(sender));
-				System.out.println("received from = " + msg.getSrc());
+//				System.out.println("received from = " + msg.getSrc());
 				System.out.println("received msg = " + msg);
-				System.out
-						.println("The content is " + (String) msg.getObject());
+//				System.out
+//						.println("The content is " + (String) msg.getObject());
 				// msg = new Message(null, null, str);
 				// System.out.println("type is " + msgTrains.getPayload()[0]);
-				System.out.println("prot = " + prot);
+//				System.out.println("prot = " + prot);
 
 				String clusterName = ((TrainHeader) msg.getHeader(prot.id))
 						.getClusterName();
 
-				System.out.println("msg cluster = " + clusterName
-						+ ", prot.clusterName = " + prot.cluster);
+//				System.out.println("msg cluster = " + clusterName
+//						+ ", prot.clusterName = " + prot.cluster);
 
 				if (prot.cluster.equals(clusterName)) {
 					Event evt = new Event(Event.MSG, msg);
@@ -499,7 +495,7 @@ public class Trains extends Protocol {
 		}
 
 		public String toString() {
-			return "clusterName=" + clusterName;
+			return "clusterName = " + clusterName;
 		}
 	}
 
